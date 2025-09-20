@@ -166,6 +166,15 @@
             background: var(--danger-dark);
         }
         
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: var(--success-dark);
+        }
+        
         .message {
             padding: 15px;
             border-radius: 6px;
@@ -240,6 +249,12 @@
             display: none;
         }
         
+        .login-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -286,7 +301,23 @@
                     </div>
                     <button type="submit" class="btn-primary">Registrarse</button>
                 </form>
-                <div id="message" class="message" style="display: none;"></div>
+                <div id="registerMessage" class="message" style="display: none;"></div>
+                
+                <div class="login-section">
+                    <h2>Iniciar Sesión</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginUsername">Nombre de usuario:</label>
+                            <input type="text" id="loginUsername" name="loginUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Contraseña:</label>
+                            <input type="password" id="loginPassword" name="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-success">Iniciar Sesión</button>
+                    </form>
+                    <div id="loginUserMessage" class="message" style="display: none;"></div>
+                </div>
             </div>
             
             <!-- Vista de Administrador (inicialmente oculta) -->
@@ -414,6 +445,23 @@
             return { success: true, message: 'Usuario registrado exitosamente' };
         }
         
+        // Función para realizar login de usuario
+        async function userLogin(username, password) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(user => user.username === username);
+            
+            if (!user) {
+                return { success: false, message: 'Usuario no encontrado' };
+            }
+            
+            const hashedPassword = await hashPassword(password);
+            if (user.password === hashedPassword) {
+                return { success: true, message: 'Login exitoso. Bienvenido ' + username };
+            } else {
+                return { success: false, message: 'Contraseña incorrecta' };
+            }
+        }
+        
         // Función para eliminar un usuario
         function deleteUser(username) {
             if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${username}"?`)) {
@@ -425,13 +473,13 @@
             
             localStorage.setItem('users', JSON.stringify(filteredUsers));
             displayUsers();
-            showMessage(`Usuario "${username}" eliminado correctamente`, true);
+            showMessage(`Usuario "${username}" eliminado correctamente`, true, 'registerMessage');
             return true;
         }
         
         // Función para mostrar mensajes al usuario
-        function showMessage(message, isSuccess) {
-            const messageDiv = document.getElementById('message');
+        function showMessage(message, isSuccess, elementId = 'registerMessage') {
+            const messageDiv = document.getElementById(elementId);
             messageDiv.textContent = message;
             messageDiv.className = isSuccess ? 'message success' : 'message error';
             messageDiv.style.display = 'block';
@@ -463,7 +511,7 @@
                 <div class="user-item">
                     <div class="user-info">
                         <strong>Usuario:</strong> ${user.username}<br>
-                        <strong>Contraseña cifrada:</strong> ${user.password.substring(0, 20)}...<br>
+                        <strong>Contraseña cifrada:</strong> ${user.password}<br>
                         <strong>Registrado el:</strong> ${new Date(user.registeredAt).toLocaleString()}
                     </div>
                     <div class="user-actions">
@@ -504,15 +552,35 @@
             const password = document.getElementById('password').value;
             
             if (!username || !password) {
-                showMessage('Por favor, complete todos los campos', false);
+                showMessage('Por favor, complete todos los campos', false, 'registerMessage');
                 return;
             }
             
             const result = await registerUser(username, password);
-            showMessage(result.message, result.success);
+            showMessage(result.message, result.success, 'registerMessage');
             
             if (result.success) {
                 document.getElementById('registerForm').reset();
+            }
+        });
+        
+        // Manejar el envío del formulario de login de usuario
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showMessage('Por favor, complete todos los campos', false, 'loginUserMessage');
+                return;
+            }
+            
+            const result = await userLogin(username, password);
+            showMessage(result.message, result.success, 'loginUserMessage');
+            
+            if (result.success) {
+                document.getElementById('loginForm').reset();
             }
         });
         

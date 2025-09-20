@@ -48,11 +48,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .logo {
             font-size: 24px;
             font-weight: bold;
+            margin-right: 20px;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         
         .view-toggle {
@@ -76,7 +85,7 @@
             background: var(--primary);
         }
         
-        .admin-login {
+        .admin-login, .user-login {
             background: var(--primary);
             color: white;
             border: none;
@@ -86,8 +95,43 @@
             transition: background 0.3s;
         }
         
+        .user-login {
+            background: var(--success);
+        }
+        
         .admin-login:hover {
             background: var(--primary-dark);
+        }
+        
+        .user-login:hover {
+            background: var(--success-dark);
+        }
+        
+        .user-welcome {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        
+        .user-welcome span {
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
         
         .content {
@@ -232,7 +276,7 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .admin-login-form {
+        .admin-login-form, .user-login-form {
             background: white;
             padding: 30px;
             border-radius: 8px;
@@ -241,7 +285,7 @@
             margin: 40px auto;
         }
         
-        .admin-login-form h2 {
+        .admin-login-form h2, .user-login-form h2 {
             text-align: center;
         }
         
@@ -265,8 +309,14 @@
                 gap: 15px;
             }
             
+            .header-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
             .view-toggle {
                 width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -275,11 +325,18 @@
     <div class="container">
         <header>
             <div class="logo">Sistema de Registro Seguro</div>
-            <div class="view-toggle">
-                <button id="userViewBtn" class="active">Vista Usuario</button>
-                <button id="adminViewBtn">Vista Administrador</button>
+            <div class="header-controls">
+                <div class="view-toggle">
+                    <button id="userViewBtn" class="active">Vista Usuario</button>
+                    <button id="adminViewBtn">Vista Administrador</button>
+                </div>
+                <button class="user-login" id="userLoginBtn">Iniciar Sesión</button>
+                <button class="admin-login" id="adminLoginBtn">Acceso Administradores</button>
+                <div id="userWelcome" class="user-welcome hidden">
+                    <span id="welcomeText"></span>
+                    <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+                </div>
             </div>
-            <button class="admin-login" id="adminLoginBtn">Acceso Administradores</button>
         </header>
         
         <div class="content">
@@ -302,22 +359,6 @@
                     <button type="submit" class="btn-primary">Registrarse</button>
                 </form>
                 <div id="registerMessage" class="message" style="display: none;"></div>
-                
-                <div class="login-section">
-                    <h2>Iniciar Sesión</h2>
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <label for="loginUsername">Nombre de usuario:</label>
-                            <input type="text" id="loginUsername" name="loginUsername" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="loginPassword">Contraseña:</label>
-                            <input type="password" id="loginPassword" name="loginPassword" required>
-                        </div>
-                        <button type="submit" class="btn-success">Iniciar Sesión</button>
-                    </form>
-                    <div id="loginUserMessage" class="message" style="display: none;"></div>
-                </div>
             </div>
             
             <!-- Vista de Administrador (inicialmente oculta) -->
@@ -336,7 +377,7 @@
     </div>
 
     <!-- Modal de Login para Administradores -->
-    <div id="loginModal" class="admin-login-form hidden">
+    <div id="adminLoginModal" class="admin-login-form hidden">
         <h2>Acceso de Administrador</h2>
         <div class="form-group">
             <label for="adminUsername">Usuario:</label>
@@ -346,9 +387,25 @@
             <label for="adminPassword">Contraseña:</label>
             <input type="password" id="adminPassword" placeholder="admin123">
         </div>
-        <button id="loginBtn" class="btn-primary">Iniciar Sesión</button>
-        <button id="cancelLoginBtn" style="margin-left: 10px;">Cancelar</button>
-        <div id="loginMessage" class="message" style="display: none; margin-top: 15px;"></div>
+        <button id="adminLoginSubmitBtn" class="btn-primary">Iniciar Sesión</button>
+        <button id="cancelAdminLoginBtn" style="margin-left: 10px;">Cancelar</button>
+        <div id="adminLoginMessage" class="message" style="display: none; margin-top: 15px;"></div>
+    </div>
+
+    <!-- Modal de Login para Usuarios -->
+    <div id="userLoginModal" class="user-login-form hidden">
+        <h2>Iniciar Sesión</h2>
+        <div class="form-group">
+            <label for="loginUsername">Usuario:</label>
+            <input type="text" id="loginUsername" required>
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Contraseña:</label>
+            <input type="password" id="loginPassword" required>
+        </div>
+        <button id="userLoginSubmitBtn" class="btn-success">Iniciar Sesión</button>
+        <button id="cancelUserLoginBtn" style="margin-left: 10px;">Cancelar</button>
+        <div id="userLoginMessage" class="message" style="display: none; margin-top: 15px;"></div>
     </div>
 
     <script>
@@ -360,18 +417,27 @@
         
         // Estado de la aplicación
         let isAdminLoggedIn = false;
+        let isUserLoggedIn = false;
+        let currentUser = null;
         let currentView = 'user';
         
         // Elementos DOM
         const userViewBtn = document.getElementById('userViewBtn');
         const adminViewBtn = document.getElementById('adminViewBtn');
         const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const userLoginBtn = document.getElementById('userLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
         const userView = document.getElementById('userView');
         const adminView = document.getElementById('adminView');
         const adminPanel = document.getElementById('adminPanel');
-        const loginModal = document.getElementById('loginModal');
-        const cancelLoginBtn = document.getElementById('cancelLoginBtn');
-        const loginBtn = document.getElementById('loginBtn');
+        const adminLoginModal = document.getElementById('adminLoginModal');
+        const userLoginModal = document.getElementById('userLoginModal');
+        const cancelAdminLoginBtn = document.getElementById('cancelAdminLoginBtn');
+        const cancelUserLoginBtn = document.getElementById('cancelUserLoginBtn');
+        const adminLoginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
+        const userLoginSubmitBtn = document.getElementById('userLoginSubmitBtn');
+        const userWelcome = document.getElementById('userWelcome');
+        const welcomeText = document.getElementById('welcomeText');
         
         // Cambiar a vista de usuario
         function showUserView() {
@@ -399,15 +465,38 @@
             }
         }
         
-        // Mostrar modal de login
-        function showLoginModal() {
-            loginModal.classList.remove('hidden');
+        // Mostrar modal de login de admin
+        function showAdminLoginModal() {
+            adminLoginModal.classList.remove('hidden');
         }
         
-        // Ocultar modal de login
-        function hideLoginModal() {
-            loginModal.classList.add('hidden');
-            document.getElementById('loginMessage').style.display = 'none';
+        // Mostrar modal de login de usuario
+        function showUserLoginModal() {
+            userLoginModal.classList.remove('hidden');
+        }
+        
+        // Ocultar modal de login de admin
+        function hideAdminLoginModal() {
+            adminLoginModal.classList.add('hidden');
+            document.getElementById('adminLoginMessage').style.display = 'none';
+        }
+        
+        // Ocultar modal de login de usuario
+        function hideUserLoginModal() {
+            userLoginModal.classList.add('hidden');
+            document.getElementById('userLoginMessage').style.display = 'none';
+        }
+        
+        // Actualizar la interfaz según el estado de login
+        function updateLoginUI() {
+            if (isUserLoggedIn && currentUser) {
+                userLoginBtn.classList.add('hidden');
+                userWelcome.classList.remove('hidden');
+                welcomeText.textContent = `Bienvenido ${currentUser}`;
+            } else {
+                userLoginBtn.classList.remove('hidden');
+                userWelcome.classList.add('hidden');
+            }
         }
         
         // Función para cifrar la contraseña usando SHA-256
@@ -456,7 +545,7 @@
             
             const hashedPassword = await hashPassword(password);
             if (user.password === hashedPassword) {
-                return { success: true, message: 'Login exitoso. Bienvenido ' + username };
+                return { success: true, message: 'Login exitoso', username: username };
             } else {
                 return { success: false, message: 'Contraseña incorrecta' };
             }
@@ -490,8 +579,8 @@
         }
         
         // Función para mostrar mensajes en el login
-        function showLoginMessage(message, isSuccess) {
-            const messageDiv = document.getElementById('loginMessage');
+        function showLoginMessage(message, isSuccess, isAdmin = false) {
+            const messageDiv = document.getElementById(isAdmin ? 'adminLoginMessage' : 'userLoginMessage');
             messageDiv.textContent = message;
             messageDiv.className = isSuccess ? 'message success' : 'message error';
             messageDiv.style.display = 'block';
@@ -528,21 +617,55 @@
             
             if (username === adminCredentials.username && password === adminCredentials.password) {
                 isAdminLoggedIn = true;
-                hideLoginModal();
+                hideAdminLoginModal();
                 adminPanel.style.display = 'block';
                 displayUsers();
-                showLoginMessage('', false); // Limpiar mensaje
+                showLoginMessage('', false, true); // Limpiar mensaje
             } else {
-                showLoginMessage('Credenciales incorrectas', false);
+                showLoginMessage('Credenciales incorrectas', false, true);
             }
+        }
+        
+        // Función para realizar logout
+        function logout() {
+            isUserLoggedIn = false;
+            currentUser = null;
+            updateLoginUI();
+            showMessage('Sesión cerrada correctamente', true, 'registerMessage');
         }
         
         // Event Listeners
         userViewBtn.addEventListener('click', showUserView);
         adminViewBtn.addEventListener('click', showAdminView);
-        adminLoginBtn.addEventListener('click', showLoginModal);
-        cancelLoginBtn.addEventListener('click', hideLoginModal);
-        loginBtn.addEventListener('click', adminLogin);
+        adminLoginBtn.addEventListener('click', showAdminLoginModal);
+        userLoginBtn.addEventListener('click', showUserLoginModal);
+        logoutBtn.addEventListener('click', logout);
+        cancelAdminLoginBtn.addEventListener('click', hideAdminLoginModal);
+        cancelUserLoginBtn.addEventListener('click', hideUserLoginModal);
+        adminLoginSubmitBtn.addEventListener('click', adminLogin);
+        
+        // Manejar el envío del formulario de login de usuario
+        userLoginSubmitBtn.addEventListener('click', async function() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showLoginMessage('Por favor, complete todos los campos', false, false);
+                return;
+            }
+            
+            const result = await userLogin(username, password);
+            if (result.success) {
+                isUserLoggedIn = true;
+                currentUser = result.username;
+                hideUserLoginModal();
+                updateLoginUI();
+                showLoginMessage('', false, false); // Limpiar mensaje
+                showMessage(result.message, true, 'registerMessage');
+            } else {
+                showLoginMessage(result.message, false, false);
+            }
+        });
         
         // Manejar el envío del formulario de registro
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -564,28 +687,9 @@
             }
         });
         
-        // Manejar el envío del formulario de login de usuario
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!username || !password) {
-                showMessage('Por favor, complete todos los campos', false, 'loginUserMessage');
-                return;
-            }
-            
-            const result = await userLogin(username, password);
-            showMessage(result.message, result.success, 'loginUserMessage');
-            
-            if (result.success) {
-                document.getElementById('loginForm').reset();
-            }
-        });
-        
         // Inicializar la vista de usuario al cargar
         showUserView();
+        updateLoginUI();
     </script>
 </body>
 </html>

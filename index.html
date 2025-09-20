@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Registro con Roles</title>
+    <title>Sistema de Registro Multiplataforma</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary: #3498db;
@@ -240,6 +242,19 @@
             display: none;
         }
         
+        .firebase-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #FFA000;
+        }
+        
+        .firebase-info h3 {
+            color: #FFA000;
+            margin-bottom: 10px;
+        }
+        
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -259,7 +274,7 @@
 <body>
     <div class="container">
         <header>
-            <div class="logo">Sistema de Registro Seguro</div>
+            <div class="logo">Sistema de Registro con Firebase</div>
             <div class="view-toggle">
                 <button id="userViewBtn" class="active">Vista Usuario</button>
                 <button id="adminViewBtn">Vista Administrador</button>
@@ -287,6 +302,17 @@
                     <button type="submit" class="btn-primary">Registrarse</button>
                 </form>
                 <div id="message" class="message" style="display: none;"></div>
+                
+                <div class="firebase-info">
+                    <h3>⚠️ Configuración Requerida</h3>
+                    <p>Para que la aplicación funcione correctamente, debes configurar Firebase:</p>
+                    <ol>
+                        <li>Ve a <a href="https://firebase.google.com/" target="_blank">Firebase Console</a></li>
+                        <li>Crea un nuevo proyecto o selecciona uno existente</li>
+                        <li>Habilita Firestore Database</li>
+                        <li>Copia la configuración de tu proyecto y pégala en el código JavaScript</li>
+                    </ol>
+                </div>
             </div>
             
             <!-- Vista de Administrador (inicialmente oculta) -->
@@ -321,6 +347,34 @@
     </div>
 
     <script>
+        // =========================================================================
+        // CONFIGURACIÓN DE FIREBASE - REEMPLAZA CON TU PROPIA CONFIGURACIÓN
+        // =========================================================================
+        
+        // Para configurar Firebase:
+        // 1. Ve a https://firebase.google.com/ y crea una cuenta o inicia sesión
+        // 2. Crea un nuevo proyecto en Firebase Console
+        // 3. Habilita Firestore Database en tu proyecto
+        // 4. Ve a Configuración del proyecto > Tus apps > Agregar app > Web
+        // 5. Copia la configuración y reemplaza el objeto firebaseConfig a continuación
+        
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "tu-proyecto.firebaseapp.com",
+            projectId: "tu-proyecto-id",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "TU_APP_ID"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // =========================================================================
+        // FIN DE CONFIGURACIÓN DE FIREBASE
+        // =========================================================================
+        
         // Datos de administrador (en un caso real, esto estaría en el servidor)
         const adminCredentials = {
             username: "admin",
@@ -362,7 +416,7 @@
             // Si el admin está logueado, mostrar el panel
             if (isAdminLoggedIn) {
                 adminPanel.style.display = 'block';
-                displayUsers();
+                loadUsers();
             } else {
                 adminPanel.style.display = 'none';
             }
@@ -389,7 +443,7 @@
             return hashHex;
         }
         
-        // Función para registrar un nuevo usuario
+        // Función para registrar un nuevo usuario en Firebase
         async function registerUser(username, password) {
             // Validar que las contraseñas coincidan
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -397,36 +451,86 @@
                 return { success: false, message: 'Las contraseñas no coinciden' };
             }
             
-            const hashedPassword = await hashPassword(password);
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            if (users.some(user => user.username === username)) {
-                return { success: false, message: 'El nombre de usuario ya existe' };
+            try {
+                const hashedPassword = await hashPassword(password);
+                
+                // Verificar si el usuario ya existe
+                const userQuery = await db.collection('users')
+                    .where('username', '==', username)
+                    .get();
+                
+                if (!userQuery.empty) {
+                    return { success: false, message: 'El nombre de usuario ya existe' };
+                }
+                
+                // Guardar usuario en Firebase
+                await db.collection('users').add({
+                    username: username,
+                    password: hashedPassword,
+                    registeredAt: new Date().toISOString()
+                });
+                
+                return { success: true, message: 'Usuario registrado exitosamente' };
+            } catch (error) {
+                console.error('Error al registrar usuario:', error);
+                return { success: false, message: 'Error al registrar usuario. Verifica la configuración de Firebase.' };
             }
-            
-            users.push({
-                username,
-                password: hashedPassword,
-                registeredAt: new Date().toISOString()
-            });
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            return { success: true, message: 'Usuario registrado exitosamente' };
         }
         
-        // Función para eliminar un usuario
-        function deleteUser(username) {
+        // Función para cargar usuarios desde Firebase
+        async function loadUsers() {
+            try {
+                const usersContainer = document.getElementById('usersContainer');
+                usersContainer.innerHTML = '<p>Cargando usuarios...</p>';
+                
+                const querySnapshot = await db.collection('users').get();
+                
+                if (querySnapshot.empty) {
+                    usersContainer.innerHTML = '<p>No hay usuarios registrados</p>';
+                    return;
+                }
+                
+                let usersHTML = '';
+                querySnapshot.forEach((doc) => {
+                    const user = doc.data();
+                    usersHTML += `
+                        <div class="user-item">
+                            <div class="user-info">
+                                <strong>Usuario:</strong> ${user.username}<br>
+                                <strong>Contraseña cifrada:</strong> ${user.password.substring(0, 20)}...<br>
+                                <strong>Registrado el:</strong> ${new Date(user.registeredAt).toLocaleString()}
+                            </div>
+                            <div class="user-actions">
+                                <button class="btn-danger" onclick="deleteUser('${doc.id}', '${user.username}')">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                usersContainer.innerHTML = usersHTML;
+            } catch (error) {
+                console.error('Error al cargar usuarios:', error);
+                document.getElementById('usersContainer').innerHTML = 
+                    '<p class="error">Error al cargar usuarios. Verifica la configuración de Firebase.</p>';
+            }
+        }
+        
+        // Función para eliminar un usuario de Firebase
+        async function deleteUser(userId, username) {
             if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${username}"?`)) {
                 return false;
             }
             
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const filteredUsers = users.filter(user => user.username !== username);
-            
-            localStorage.setItem('users', JSON.stringify(filteredUsers));
-            displayUsers();
-            showMessage(`Usuario "${username}" eliminado correctamente`, true);
-            return true;
+            try {
+                await db.collection('users').doc(userId).delete();
+                showMessage(`Usuario "${username}" eliminado correctamente`, true);
+                loadUsers(); // Recargar la lista de usuarios
+                return true;
+            } catch (error) {
+                console.error('Error al eliminar usuario:', error);
+                showMessage('Error al eliminar usuario', false);
+                return false;
+            }
         }
         
         // Función para mostrar mensajes al usuario
@@ -449,30 +553,6 @@
             messageDiv.style.display = 'block';
         }
         
-        // Función para mostrar los usuarios registrados
-        function displayUsers() {
-            const usersContainer = document.getElementById('usersContainer');
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            if (users.length === 0) {
-                usersContainer.innerHTML = '<p>No hay usuarios registrados</p>';
-                return;
-            }
-            
-            usersContainer.innerHTML = users.map(user => `
-                <div class="user-item">
-                    <div class="user-info">
-                        <strong>Usuario:</strong> ${user.username}<br>
-                        <strong>Contraseña cifrada:</strong> ${user.password.substring(0, 20)}...<br>
-                        <strong>Registrado el:</strong> ${new Date(user.registeredAt).toLocaleString()}
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn-danger" onclick="deleteUser('${user.username}')">Eliminar</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
         // Función para realizar login de administrador
         function adminLogin() {
             const username = document.getElementById('adminUsername').value;
@@ -482,7 +562,7 @@
                 isAdminLoggedIn = true;
                 hideLoginModal();
                 adminPanel.style.display = 'block';
-                displayUsers();
+                loadUsers();
                 showLoginMessage('', false); // Limpiar mensaje
             } else {
                 showLoginMessage('Credenciales incorrectas', false);

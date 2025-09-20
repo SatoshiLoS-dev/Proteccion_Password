@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Registro con Visualización Corregida</title>
+    <title>Sistema de Registro con Roles</title>
     <style>
         :root {
             --primary: #3498db;
@@ -48,13 +48,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
         }
         
         .logo {
             font-size: 24px;
             font-weight: bold;
-            margin-bottom: 10px;
         }
         
         .view-toggle {
@@ -62,7 +60,6 @@
             background: rgba(255, 255, 255, 0.1);
             border-radius: 30px;
             padding: 5px;
-            margin-bottom: 10px;
         }
         
         .view-toggle button {
@@ -243,28 +240,6 @@
             display: none;
         }
         
-        .sync-info {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .sync-info h3 {
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-        
-        .device-id {
-            background: #f0f7ff;
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-family: monospace;
-            word-break: break-all;
-        }
-        
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -272,15 +247,10 @@
             
             header {
                 flex-direction: column;
-                align-items: stretch;
+                gap: 15px;
             }
             
             .view-toggle {
-                width: 100%;
-                margin: 10px 0;
-            }
-            
-            .admin-login {
                 width: 100%;
             }
         }
@@ -289,7 +259,7 @@
 <body>
     <div class="container">
         <header>
-            <div class="logo">Sistema de Registro Multi-Dispositivo</div>
+            <div class="logo">Sistema de Registro Seguro</div>
             <div class="view-toggle">
                 <button id="userViewBtn" class="active">Vista Usuario</button>
                 <button id="adminViewBtn">Vista Administrador</button>
@@ -317,20 +287,6 @@
                     <button type="submit" class="btn-primary">Registrarse</button>
                 </form>
                 <div id="message" class="message" style="display: none;"></div>
-                
-                <div class="sync-info">
-                    <h3>Sincronización entre dispositivos</h3>
-                    <p>Para ver los usuarios registrados desde otros dispositivos, copia tu ID de dispositivo y pégalo en el otro dispositivo.</p>
-                    <div class="device-id">
-                        <strong>ID de este dispositivo:</strong> 
-                        <span id="deviceId"></span>
-                    </div>
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label for="otherDeviceId">ID de otro dispositivo:</label>
-                        <input type="text" id="otherDeviceId" placeholder="Pega aquí el ID de otro dispositivo">
-                        <button type="button" id="loadOtherDevice" style="margin-top: 10px; width: 100%;">Cargar usuarios del otro dispositivo</button>
-                    </div>
-                </div>
             </div>
             
             <!-- Vista de Administrador (inicialmente oculta) -->
@@ -365,23 +321,15 @@
     </div>
 
     <script>
-        // Datos de administrador
+        // Datos de administrador (en un caso real, esto estaría en el servidor)
         const adminCredentials = {
             username: "admin",
-            password: "admin123"
+            password: "admin123" // En un caso real, esto estaría cifrado
         };
         
         // Estado de la aplicación
         let isAdminLoggedIn = false;
         let currentView = 'user';
-        let currentDeviceId = localStorage.getItem('deviceId') || generateDeviceId();
-        
-        // Generar un ID único para el dispositivo
-        function generateDeviceId() {
-            const id = 'device-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
-            localStorage.setItem('deviceId', id);
-            return id;
-        }
         
         // Elementos DOM
         const userViewBtn = document.getElementById('userViewBtn');
@@ -393,18 +341,6 @@
         const loginModal = document.getElementById('loginModal');
         const cancelLoginBtn = document.getElementById('cancelLoginBtn');
         const loginBtn = document.getElementById('loginBtn');
-        const deviceIdElement = document.getElementById('deviceId');
-        const loadOtherDeviceBtn = document.getElementById('loadOtherDevice');
-        
-        // Inicializar la aplicación
-        function initApp() {
-            deviceIdElement.textContent = currentDeviceId;
-            
-            // Mostrar el ID del dispositivo actual
-            if (!localStorage.getItem('deviceId')) {
-                localStorage.setItem('deviceId', currentDeviceId);
-            }
-        }
         
         // Cambiar a vista de usuario
         function showUserView() {
@@ -426,7 +362,7 @@
             // Si el admin está logueado, mostrar el panel
             if (isAdminLoggedIn) {
                 adminPanel.style.display = 'block';
-                loadUsers();
+                displayUsers();
             } else {
                 adminPanel.style.display = 'none';
             }
@@ -462,70 +398,34 @@
             }
             
             const hashedPassword = await hashPassword(password);
-            
-            // Obtener usuarios existentes
             const users = JSON.parse(localStorage.getItem('users') || '[]');
             
-            // Verificar si el usuario ya existe
             if (users.some(user => user.username === username)) {
                 return { success: false, message: 'El nombre de usuario ya existe' };
             }
             
-            // Guardar el usuario con la contraseña cifrada
             users.push({
-                id: Date.now().toString(),
                 username,
                 password: hashedPassword,
-                registeredAt: new Date().toISOString(),
-                deviceId: currentDeviceId
+                registeredAt: new Date().toISOString()
             });
             
             localStorage.setItem('users', JSON.stringify(users));
             return { success: true, message: 'Usuario registrado exitosamente' };
         }
         
-        // Función para cargar usuarios
-        function loadUsers(deviceId = null) {
-            const usersContainer = document.getElementById('usersContainer');
-            let users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            // Filtrar por dispositivo si se especifica
-            if (deviceId) {
-                users = users.filter(user => user.deviceId === deviceId);
-            }
-            
-            if (users.length === 0) {
-                usersContainer.innerHTML = '<p>No hay usuarios registrados</p>';
-                return;
-            }
-            
-            usersContainer.innerHTML = users.map(user => `
-                <div class="user-item">
-                    <div class="user-info">
-                        <strong>Usuario:</strong> ${user.username}<br>
-                        <strong>Contraseña cifrada:</strong> ${user.password.substring(0, 20)}...<br>
-                        <strong>Registrado el:</strong> ${new Date(user.registeredAt).toLocaleString()}<br>
-                        <strong>Dispositivo:</strong> ${user.deviceId}
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn-danger" onclick="deleteUser('${user.id}')">Eliminar</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
         // Función para eliminar un usuario
-        function deleteUser(userId) {
-            if (!confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+        function deleteUser(username) {
+            if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${username}"?`)) {
                 return false;
             }
             
             const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const filteredUsers = users.filter(user => user.id !== userId);
+            const filteredUsers = users.filter(user => user.username !== username);
             
             localStorage.setItem('users', JSON.stringify(filteredUsers));
-            loadUsers();
-            showMessage('Usuario eliminado correctamente', true);
+            displayUsers();
+            showMessage(`Usuario "${username}" eliminado correctamente`, true);
             return true;
         }
         
@@ -549,6 +449,30 @@
             messageDiv.style.display = 'block';
         }
         
+        // Función para mostrar los usuarios registrados
+        function displayUsers() {
+            const usersContainer = document.getElementById('usersContainer');
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            if (users.length === 0) {
+                usersContainer.innerHTML = '<p>No hay usuarios registrados</p>';
+                return;
+            }
+            
+            usersContainer.innerHTML = users.map(user => `
+                <div class="user-item">
+                    <div class="user-info">
+                        <strong>Usuario:</strong> ${user.username}<br>
+                        <strong>Contraseña cifrada:</strong> ${user.password.substring(0, 20)}...<br>
+                        <strong>Registrado el:</strong> ${new Date(user.registeredAt).toLocaleString()}
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-danger" onclick="deleteUser('${user.username}')">Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
         // Función para realizar login de administrador
         function adminLogin() {
             const username = document.getElementById('adminUsername').value;
@@ -558,7 +482,7 @@
                 isAdminLoggedIn = true;
                 hideLoginModal();
                 adminPanel.style.display = 'block';
-                loadUsers();
+                displayUsers();
                 showLoginMessage('', false); // Limpiar mensaje
             } else {
                 showLoginMessage('Credenciales incorrectas', false);
@@ -571,17 +495,6 @@
         adminLoginBtn.addEventListener('click', showLoginModal);
         cancelLoginBtn.addEventListener('click', hideLoginModal);
         loginBtn.addEventListener('click', adminLogin);
-        
-        // Cargar usuarios de otro dispositivo
-        loadOtherDeviceBtn.addEventListener('click', function() {
-            const otherDeviceId = document.getElementById('otherDeviceId').value;
-            if (otherDeviceId) {
-                loadUsers(otherDeviceId);
-                showMessage(`Mostrando usuarios del dispositivo: ${otherDeviceId}`, true);
-            } else {
-                showMessage('Por favor, ingresa un ID de dispositivo', false);
-            }
-        });
         
         // Manejar el envío del formulario de registro
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -603,8 +516,7 @@
             }
         });
         
-        // Inicializar la aplicación
-        initApp();
+        // Inicializar la vista de usuario al cargar
         showUserView();
     </script>
 </body>

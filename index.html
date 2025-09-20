@@ -85,6 +85,11 @@
             background: var(--primary);
         }
         
+        .view-toggle button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
         .admin-login, .user-login {
             background: var(--primary);
             color: white;
@@ -99,12 +104,17 @@
             background: var(--success);
         }
         
-        .admin-login:hover {
+        .admin-login:hover:not(:disabled) {
             background: var(--primary-dark);
         }
         
-        .user-login:hover {
+        .user-login:hover:not(:disabled) {
             background: var(--success-dark);
+        }
+        
+        .admin-login:disabled, .user-login:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .user-welcome {
@@ -219,6 +229,15 @@
             background: var(--success-dark);
         }
         
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
         .message {
             padding: 15px;
             border-radius: 6px;
@@ -276,6 +295,13 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
         
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
         .admin-login-form, .user-login-form {
             background: white;
             padding: 30px;
@@ -299,6 +325,14 @@
             border-top: 1px solid #eee;
         }
         
+        .profile-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid var(--success);
+        }
+        
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -317,6 +351,12 @@
             .view-toggle {
                 width: 100%;
                 justify-content: center;
+            }
+            
+            .admin-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
             }
         }
     </style>
@@ -342,22 +382,48 @@
         <div class="content">
             <!-- Vista de Usuario -->
             <div id="userView" class="form-section">
-                <h2>Registro de Usuario</h2>
-                <form id="registerForm">
-                    <div class="form-group">
-                        <label for="username">Nombre de usuario:</label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Contraseña:</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirmar Contraseña:</label>
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
-                    </div>
-                    <button type="submit" class="btn-primary">Registrarse</button>
-                </form>
+                <div id="registerSection">
+                    <h2>Registro de Usuario</h2>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="username">Nombre de usuario:</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Contraseña:</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirmar Contraseña:</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Registrarse</button>
+                    </form>
+                </div>
+                
+                <div id="profileSection" class="profile-section hidden">
+                    <h2>Mi Perfil</h2>
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="profileUsername">Nombre de usuario:</label>
+                            <input type="text" id="profileUsername" name="profileUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="currentPassword">Contraseña actual:</label>
+                            <input type="password" id="currentPassword" name="currentPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nueva contraseña:</label>
+                            <input type="password" id="newPassword" name="newPassword">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmNewPassword">Confirmar nueva contraseña:</label>
+                            <input type="password" id="confirmNewPassword" name="confirmNewPassword">
+                        </div>
+                        <button type="submit" class="btn-success">Actualizar Perfil</button>
+                    </form>
+                </div>
+                
                 <div id="registerMessage" class="message" style="display: none;"></div>
             </div>
             
@@ -367,7 +433,10 @@
                 <p>Para acceder a las funciones de administrador, inicie sesión con sus credenciales.</p>
                 
                 <div class="admin-panel" id="adminPanel">
-                    <h3>Lista de Usuarios Registrados</h3>
+                    <div class="admin-header">
+                        <h3>Lista de Usuarios Registrados</h3>
+                        <button id="logoutAdminBtn" class="btn-warning">Cerrar Sesión de Admin</button>
+                    </div>
                     <div class="users-list">
                         <div id="usersContainer"></div>
                     </div>
@@ -427,6 +496,7 @@
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         const userLoginBtn = document.getElementById('userLoginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
+        const logoutAdminBtn = document.getElementById('logoutAdminBtn');
         const userView = document.getElementById('userView');
         const adminView = document.getElementById('adminView');
         const adminPanel = document.getElementById('adminPanel');
@@ -438,6 +508,9 @@
         const userLoginSubmitBtn = document.getElementById('userLoginSubmitBtn');
         const userWelcome = document.getElementById('userWelcome');
         const welcomeText = document.getElementById('welcomeText');
+        const registerSection = document.getElementById('registerSection');
+        const profileSection = document.getElementById('profileSection');
+        const profileForm = document.getElementById('profileForm');
         
         // Cambiar a vista de usuario
         function showUserView() {
@@ -467,11 +540,19 @@
         
         // Mostrar modal de login de admin
         function showAdminLoginModal() {
+            if (isUserLoggedIn) {
+                showMessage('Cierre sesión de usuario primero para acceder como administrador', false, 'registerMessage');
+                return;
+            }
             adminLoginModal.classList.remove('hidden');
         }
         
         // Mostrar modal de login de usuario
         function showUserLoginModal() {
+            if (isAdminLoggedIn) {
+                showMessage('Cierre sesión de administrador primero para acceder como usuario', false, 'registerMessage');
+                return;
+            }
             userLoginModal.classList.remove('hidden');
         }
         
@@ -493,10 +574,48 @@
                 userLoginBtn.classList.add('hidden');
                 userWelcome.classList.remove('hidden');
                 welcomeText.textContent = `Bienvenido ${currentUser}`;
+                registerSection.classList.add('hidden');
+                profileSection.classList.remove('hidden');
+                document.getElementById('profileUsername').value = currentUser;
+                
+                // Deshabilitar botones de admin
+                adminLoginBtn.disabled = true;
+                adminViewBtn.disabled = true;
             } else {
                 userLoginBtn.classList.remove('hidden');
                 userWelcome.classList.add('hidden');
+                registerSection.classList.remove('hidden');
+                profileSection.classList.add('hidden');
+                
+                // Habilitar botones de admin
+                adminLoginBtn.disabled = false;
+                adminViewBtn.disabled = false;
             }
+            
+            // Actualizar botón de admin según estado
+            if (isAdminLoggedIn) {
+                adminLoginBtn.textContent = "Sesión Admin Activa";
+                adminLoginBtn.style.background = "#f39c12";
+                
+                // Deshabilitar botones de usuario
+                userLoginBtn.disabled = true;
+                userViewBtn.disabled = true;
+            } else {
+                adminLoginBtn.textContent = "Acceso Administradores";
+                adminLoginBtn.style.background = "";
+                
+                // Habilitar botones de usuario
+                userLoginBtn.disabled = false;
+                userViewBtn.disabled = false;
+            }
+        }
+        
+        // Función para cerrar sesión de administrador
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            adminPanel.style.display = 'none';
+            updateLoginUI();
+            showMessage('Sesión de administrador cerrada', true, 'registerMessage');
         }
         
         // Función para cifrar la contraseña usando SHA-256
@@ -549,6 +668,44 @@
             } else {
                 return { success: false, message: 'Contraseña incorrecta' };
             }
+        }
+        
+        // Función para actualizar perfil de usuario
+        async function updateUserProfile(oldUsername, newUsername, currentPassword, newPassword) {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(user => user.username === oldUsername);
+            
+            if (userIndex === -1) {
+                return { success: false, message: 'Usuario no encontrado' };
+            }
+            
+            // Verificar contraseña actual si se quiere cambiar la contraseña
+            if (newPassword) {
+                const hashedCurrentPassword = await hashPassword(currentPassword);
+                if (users[userIndex].password !== hashedCurrentPassword) {
+                    return { success: false, message: 'Contraseña actual incorrecta' };
+                }
+                
+                // Validar que las nuevas contraseñas coincidan
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+                if (newPassword !== confirmNewPassword) {
+                    return { success: false, message: 'Las nuevas contraseñas no coinciden' };
+                }
+                
+                // Actualizar contraseña
+                users[userIndex].password = await hashPassword(newPassword);
+            }
+            
+            // Verificar si el nuevo nombre de usuario ya existe (si se está cambiando)
+            if (newUsername !== oldUsername && users.some(user => user.username === newUsername)) {
+                return { success: false, message: 'El nombre de usuario ya existe' };
+            }
+            
+            // Actualizar nombre de usuario
+            users[userIndex].username = newUsername;
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            return { success: true, message: 'Perfil actualizado correctamente', username: newUsername };
         }
         
         // Función para eliminar un usuario
@@ -621,17 +778,19 @@
                 adminPanel.style.display = 'block';
                 displayUsers();
                 showLoginMessage('', false, true); // Limpiar mensaje
+                updateLoginUI();
             } else {
                 showLoginMessage('Credenciales incorrectas', false, true);
             }
         }
         
-        // Función para realizar logout
+        // Función para realizar logout de usuario
         function logout() {
             isUserLoggedIn = false;
             currentUser = null;
             updateLoginUI();
             showMessage('Sesión cerrada correctamente', true, 'registerMessage');
+            profileForm.reset();
         }
         
         // Event Listeners
@@ -640,6 +799,7 @@
         adminLoginBtn.addEventListener('click', showAdminLoginModal);
         userLoginBtn.addEventListener('click', showUserLoginModal);
         logoutBtn.addEventListener('click', logout);
+        logoutAdminBtn.addEventListener('click', logoutAdmin);
         cancelAdminLoginBtn.addEventListener('click', hideAdminLoginModal);
         cancelUserLoginBtn.addEventListener('click', hideUserLoginModal);
         adminLoginSubmitBtn.addEventListener('click', adminLogin);
@@ -684,6 +844,37 @@
             
             if (result.success) {
                 document.getElementById('registerForm').reset();
+            }
+        });
+        
+        // Manejar el envío del formulario de perfil
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newUsername = document.getElementById('profileUsername').value;
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            
+            if (!newUsername) {
+                showMessage('El nombre de usuario es requerido', false, 'registerMessage');
+                return;
+            }
+            
+            // Si se quiere cambiar la contraseña, validar campos
+            if (newPassword && !currentPassword) {
+                showMessage('Debe ingresar la contraseña actual para cambiarla', false, 'registerMessage');
+                return;
+            }
+            
+            const result = await updateUserProfile(currentUser, newUsername, currentPassword, newPassword);
+            if (result.success) {
+                currentUser = result.username;
+                updateLoginUI();
+                showMessage(result.message, true, 'registerMessage');
+                profileForm.reset();
+                document.getElementById('profileUsername').value = currentUser;
+            } else {
+                showMessage(result.message, false, 'registerMessage');
             }
         });
         

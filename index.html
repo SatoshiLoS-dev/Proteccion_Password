@@ -3,884 +3,692 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Registro con Roles</title>
+    <title>Cifrado AES y RSA - Versión Simplificada</title>
     <style>
         :root {
-            --primary: #3498db;
-            --primary-dark: #2980b9;
-            --danger: #e74c3c;
-            --danger-dark: #c0392b;
-            --success: #2ecc71;
-            --success-dark: #27ae60;
-            --dark: #2c3e50;
-            --light: #ecf0f1;
-            --gray: #95a5a6;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
         }
         
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            color: #333;
+            background-color: #f5f7fa;
+            color: var(--dark-color);
             line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            padding: 20px;
         }
         
         header {
-            background: var(--dark);
+            background-color: var(--primary-color);
             color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            color: var(--light-color);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            margin-right: 20px;
-        }
-        
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .view-toggle {
-            display: flex;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            padding: 5px;
-        }
-        
-        .view-toggle button {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 30px;
-            background: transparent;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .view-toggle button.active {
-            background: var(--primary);
-        }
-        
-        .view-toggle button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .admin-login, .user-login {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .user-login {
-            background: var(--success);
-        }
-        
-        .admin-login:hover:not(:disabled) {
-            background: var(--primary-dark);
-        }
-        
-        .user-login:hover:not(:disabled) {
-            background: var(--success-dark);
-        }
-        
-        .admin-login:disabled, .user-login:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .user-welcome {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 8px 15px;
-            border-radius: 20px;
-        }
-        
-        .user-welcome span {
-            font-weight: 600;
-        }
-        
-        .logout-btn {
-            background: transparent;
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 4px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .content {
-            padding: 30px;
-            display: flex;
-            gap: 30px;
-        }
-        
-        .form-section {
-            flex: 1;
-        }
-        
-        .users-section {
-            flex: 1;
-        }
-        
-        h2 {
-            color: var(--dark);
             margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
+            border-bottom: 2px solid var(--light-color);
         }
         
-        .form-group {
-            margin-bottom: 20px;
+        .input-group {
+            margin-bottom: 15px;
         }
         
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: 600;
-            color: var(--dark);
         }
         
-        input[type="text"],
-        input[type="password"] {
+        input, textarea, select {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border 0.3s;
+            border-radius: 4px;
+            font-size: 1rem;
         }
         
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: var(--primary);
-            outline: none;
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         
         button {
-            padding: 12px 20px;
+            background-color: var(--secondary-color);
+            color: white;
             border: none;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1rem;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
         }
         
-        .btn-primary {
-            background: var(--primary);
-            color: white;
+        button:hover {
+            background-color: #2980b9;
         }
         
-        .btn-primary:hover {
-            background: var(--primary-dark);
+        button.danger {
+            background-color: var(--accent-color);
         }
         
-        .btn-danger {
-            background: var(--danger);
-            color: white;
+        button.danger:hover {
+            background-color: #c0392b;
         }
         
-        .btn-danger:hover {
-            background: var(--danger-dark);
+        button.success {
+            background-color: var(--success-color);
         }
         
-        .btn-success {
-            background: var(--success);
-            color: white;
+        button.success:hover {
+            background-color: #219653;
         }
         
-        .btn-success:hover {
-            background: var(--success-dark);
-        }
-        
-        .btn-warning {
-            background: #f39c12;
-            color: white;
-        }
-        
-        .btn-warning:hover {
-            background: #e67e22;
-        }
-        
-        .message {
+        .result {
+            margin-top: 15px;
             padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            text-align: center;
+            background-color: var(--light-color);
+            border-radius: 4px;
+            word-break: break-all;
         }
         
-        .success {
+        .result-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .step {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .step:last-child {
+            border-bottom: none;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        
+        .status.success {
             background-color: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
         }
         
-        .error {
+        .status.error {
             background-color: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
         }
         
-        .users-list {
+        .verification-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
             margin-top: 20px;
         }
         
-        .user-item {
-            background: #f9f9f9;
-            padding: 15px;
+        .verification-panel h2 {
+            color: var(--primary-color);
             margin-bottom: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+        }
+        
+        .criteria-list {
+            list-style-type: none;
+        }
+        
+        .criterion {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            transition: transform 0.2s;
         }
         
-        .user-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        .criterion.pending {
+            background-color: #fff3cd;
+            color: #856404;
         }
         
-        .user-info {
-            flex-grow: 1;
+        .criterion.success {
+            background-color: #d4edda;
+            color: #155724;
         }
         
-        .user-actions {
-            margin-left: 15px;
+        .criterion.error {
+            background-color: #f8d7da;
+            color: #721c24;
         }
         
-        .admin-panel {
-            display: none;
-            background: white;
-            padding: 30px;
+        .criterion-icon {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .auto-verify {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .auto-verify input {
+            width: auto;
+            margin-right: 10px;
+        }
+        
+        .quick-action {
+            background-color: #e8f4fd;
+            padding: 15px;
             border-radius: 8px;
             margin-top: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .admin-login-form, .user-login-form {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            max-width: 400px;
-            margin: 40px auto;
-        }
-        
-        .admin-login-form h2, .user-login-form h2 {
             text-align: center;
         }
         
-        .hidden {
-            display: none;
-        }
-        
-        .login-section {
+        footer {
+            text-align: center;
             margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-        
-        .profile-section {
-            background: #f9f9f9;
             padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 4px solid var(--success);
-        }
-        
-        @media (max-width: 768px) {
-            .content {
-                flex-direction: column;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .header-controls {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .view-toggle {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .admin-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
+            color: var(--dark-color);
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">Sistema de Registro Seguro</div>
-            <div class="header-controls">
-                <div class="view-toggle">
-                    <button id="userViewBtn" class="active">Vista Usuario</button>
-                    <button id="adminViewBtn">Vista Administrador</button>
-                </div>
-                <button class="user-login" id="userLoginBtn">Iniciar Sesión</button>
-                <button class="admin-login" id="adminLoginBtn">Acceso Administradores</button>
-                <div id="userWelcome" class="user-welcome hidden">
-                    <span id="welcomeText"></span>
-                    <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
-                </div>
-            </div>
+            <h1>Sistema de Cifrado AES y RSA - Versión Simplificada</h1>
+            <p class="description">
+                Esta aplicación permite cifrar mensajes utilizando AES y proteger la clave AES mediante RSA.
+                Las claves RSA se generan automáticamente cuando son necesarias.
+            </p>
         </header>
         
-        <div class="content">
-            <!-- Vista de Usuario -->
-            <div id="userView" class="form-section">
-                <div id="registerSection">
-                    <h2>Registro de Usuario</h2>
-                    <form id="registerForm">
-                        <div class="form-group">
-                            <label for="username">Nombre de usuario:</label>
-                            <input type="text" id="username" name="username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Contraseña:</label>
-                            <input type="password" id="password" name="password" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword">Confirmar Contraseña:</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" required>
-                        </div>
-                        <button type="submit" class="btn-primary">Registrarse</button>
-                    </form>
+        <div class="quick-action">
+            <h3>Acción Rápida</h3>
+            <p>¿Quieres probar todo el proceso con un solo clic?</p>
+            <button id="full-process" class="success">Ejecutar Proceso Completo</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="card">
+                <h2>Cifrado de Mensajes</h2>
+                
+                <div class="step">
+                    <h3>Paso 1: Entrada del mensaje</h3>
+                    <div class="input-group">
+                        <label for="message-input">Mensaje a cifrar:</label>
+                        <textarea id="message-input" placeholder="Ingresa el mensaje que deseas cifrar">Este es un mensaje de prueba para el sistema de cifrado</textarea>
+                    </div>
                 </div>
                 
-                <div id="profileSection" class="profile-section hidden">
-                    <h2>Mi Perfil</h2>
-                    <form id="profileForm">
-                        <div class="form-group">
-                            <label for="profileUsername">Nombre de usuario:</label>
-                            <input type="text" id="profileUsername" name="profileUsername" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="currentPassword">Contraseña actual:</label>
-                            <input type="password" id="currentPassword" name="currentPassword">
-                        </div>
-                        <div class="form-group">
-                            <label for="newPassword">Nueva contraseña:</label>
-                            <input type="password" id="newPassword" name="newPassword">
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmNewPassword">Confirmar nueva contraseña:</label>
-                            <input type="password" id="confirmNewPassword" name="confirmNewPassword">
-                        </div>
-                        <button type="submit" class="btn-success">Actualizar Perfil</button>
-                    </form>
+                <div class="step">
+                    <h3>Paso 2: Cifrar con AES</h3>
+                    <div class="input-group">
+                        <button id="encrypt-aes">Cifrar Mensaje con AES</button>
+                    </div>
+                    <div class="result">
+                        <div class="result-label">Mensaje Cifrado (AES):</div>
+                        <div id="encrypted-message"></div>
+                    </div>
+                    <div class="result">
+                        <div class="result-label">Clave AES:</div>
+                        <div id="aes-key"></div>
+                    </div>
                 </div>
                 
-                <div id="registerMessage" class="message" style="display: none;"></div>
+                <div class="step">
+                    <h3>Paso 3: Cifrar clave AES con RSA</h3>
+                    <div class="input-group">
+                        <button id="encrypt-aes-key">Cifrar Clave AES con RSA</button>
+                    </div>
+                    <div class="result">
+                        <div class="result-label">Clave AES Cifrada (RSA):</div>
+                        <div id="encrypted-aes-key"></div>
+                    </div>
+                </div>
             </div>
             
-            <!-- Vista de Administrador (inicialmente oculta) -->
-            <div id="adminView" class="users-section hidden">
-                <h2>Gestión de Usuarios</h2>
-                <p>Para acceder a las funciones de administrador, inicie sesión con sus credenciales.</p>
+            <div class="card">
+                <h2>Descifrado de Mensajes</h2>
                 
-                <div class="admin-panel" id="adminPanel">
-                    <div class="admin-header">
-                        <h3>Lista de Usuarios Registrados</h3>
-                        <button id="logoutAdminBtn" class="btn-warning">Cerrar Sesión de Admin</button>
+                <div class="step">
+                    <h3>Paso 1: Descifrar clave AES con RSA</h3>
+                    <div class="input-group">
+                        <button id="decrypt-aes-key">Descifrar Clave AES con RSA</button>
                     </div>
-                    <div class="users-list">
-                        <div id="usersContainer"></div>
+                    <div class="result">
+                        <div class="result-label">Clave AES Descifrada:</div>
+                        <div id="decrypted-aes-key"></div>
                     </div>
+                </div>
+                
+                <div class="step">
+                    <h3>Paso 2: Descifrar mensaje con AES</h3>
+                    <div class="input-group">
+                        <button id="decrypt-message">Descifrar Mensaje con AES</button>
+                    </div>
+                    <div class="result">
+                        <div class="result-label">Mensaje Descifrado:</div>
+                        <div id="decrypted-message"></div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3>Verificación</h3>
+                    <div class="input-group">
+                        <button id="verify" class="success">Verificar Resultado</button>
+                        <button id="reset" class="danger">Reiniciar Todo</button>
+                    </div>
+                    <div id="verification-status"></div>
                 </div>
             </div>
         </div>
+        
+        <div class="verification-panel">
+            <h2>Verificación de Criterios</h2>
+            <p>Esta sección muestra el estado de cada criterio de evaluación:</p>
+            
+            <ul class="criteria-list">
+                <li id="criterion1" class="criterion pending">
+                    <span class="criterion-icon">⏳</span>
+                    <span>El prototipo permite la entrada de un mensaje en clave</span>
+                </li>
+                <li id="criterion2" class="criterion pending">
+                    <span class="criterion-icon">⏳</span>
+                    <span>El prototipo permite cifrar el mensaje con el algoritmo AES</span>
+                </li>
+                <li id="criterion3" class="criterion pending">
+                    <span class="criterion-icon">⏳</span>
+                    <span>El prototipo permite cifrar la clave de AES con el algoritmo RSA</span>
+                </li>
+                <li id="criterion4" class="criterion pending">
+                    <span class="criterion-icon">⏳</span>
+                    <span>El prototipo permite descifrar la clave de AES con el algoritmo RSA</span>
+                </li>
+                <li id="criterion5" class="criterion pending">
+                    <span class="criterion-icon">⏳</span>
+                    <span>El prototipo permite descifrar el mensaje con el algoritmo AES</span>
+                </li>
+                <li id="criterion6" class="criterion pending">
+                    <span class="criterion-icon">⏳</span>
+                    <span>El mensaje descifrado coincide con el mensaje original</span>
+                </li>
+            </ul>
+            
+            <div class="auto-verify">
+                <input type="checkbox" id="auto-verify-checkbox" checked>
+                <label for="auto-verify-checkbox">Verificación automática después de cada paso</label>
+            </div>
+            
+            <div id="final-result" class="status" style="margin-top: 20px; display: none;"></div>
+        </div>
+        
+        <footer>
+            <p>Sistema de Cifrado AES y RSA - Versión Simplificada con generación automática de claves</p>
+        </footer>
     </div>
 
-    <!-- Modal de Login para Administradores -->
-    <div id="adminLoginModal" class="admin-login-form hidden">
-        <h2>Acceso de Administrador</h2>
-        <div class="form-group">
-            <label for="adminUsername">Usuario:</label>
-            <input type="text" id="adminUsername" placeholder="admin">
-        </div>
-        <div class="form-group">
-            <label for="adminPassword">Contraseña:</label>
-            <input type="password" id="adminPassword" placeholder="admin123">
-        </div>
-        <button id="adminLoginSubmitBtn" class="btn-primary">Iniciar Sesión</button>
-        <button id="cancelAdminLoginBtn" style="margin-left: 10px;">Cancelar</button>
-        <div id="adminLoginMessage" class="message" style="display: none; margin-top: 15px;"></div>
-    </div>
-
-    <!-- Modal de Login para Usuarios -->
-    <div id="userLoginModal" class="user-login-form hidden">
-        <h2>Iniciar Sesión</h2>
-        <div class="form-group">
-            <label for="loginUsername">Usuario:</label>
-            <input type="text" id="loginUsername" required>
-        </div>
-        <div class="form-group">
-            <label for="loginPassword">Contraseña:</label>
-            <input type="password" id="loginPassword" required>
-        </div>
-        <button id="userLoginSubmitBtn" class="btn-success">Iniciar Sesión</button>
-        <button id="cancelUserLoginBtn" style="margin-left: 10px;">Cancelar</button>
-        <div id="userLoginMessage" class="message" style="display: none; margin-top: 15px;"></div>
-    </div>
-
+    <!-- Incluir bibliotecas para cifrado -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.2.1/jsencrypt.min.js"></script>
+    
     <script>
-        // Datos de administrador (en un caso real, esto estaría en el servidor)
-        const adminCredentials = {
-            username: "admin",
-            password: "admin123" // En un caso real, esto estaría cifrado
+        // Variables globales para almacenar datos
+        let rsaKeys = {
+            publicKey: '',
+            privateKey: ''
         };
         
-        // Estado de la aplicación
-        let isAdminLoggedIn = false;
-        let isUserLoggedIn = false;
-        let currentUser = null;
-        let currentView = 'user';
+        let aesData = {
+            key: '',
+            encryptedMessage: '',
+            encryptedKey: ''
+        };
         
-        // Elementos DOM
-        const userViewBtn = document.getElementById('userViewBtn');
-        const adminViewBtn = document.getElementById('adminViewBtn');
-        const adminLoginBtn = document.getElementById('adminLoginBtn');
-        const userLoginBtn = document.getElementById('userLoginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const logoutAdminBtn = document.getElementById('logoutAdminBtn');
-        const userView = document.getElementById('userView');
-        const adminView = document.getElementById('adminView');
-        const adminPanel = document.getElementById('adminPanel');
-        const adminLoginModal = document.getElementById('adminLoginModal');
-        const userLoginModal = document.getElementById('userLoginModal');
-        const cancelAdminLoginBtn = document.getElementById('cancelAdminLoginBtn');
-        const cancelUserLoginBtn = document.getElementById('cancelUserLoginBtn');
-        const adminLoginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
-        const userLoginSubmitBtn = document.getElementById('userLoginSubmitBtn');
-        const userWelcome = document.getElementById('userWelcome');
-        const welcomeText = document.getElementById('welcomeText');
-        const registerSection = document.getElementById('registerSection');
-        const profileSection = document.getElementById('profileSection');
-        const profileForm = document.getElementById('profileForm');
+        // Elementos del DOM
+        const messageInput = document.getElementById('message-input');
+        const encryptedMessageElement = document.getElementById('encrypted-message');
+        const aesKeyElement = document.getElementById('aes-key');
+        const encryptedAesKeyElement = document.getElementById('encrypted-aes-key');
+        const decryptedAesKeyElement = document.getElementById('decrypted-aes-key');
+        const decryptedMessageElement = document.getElementById('decrypted-message');
+        const verificationStatusElement = document.getElementById('verification-status');
+        const autoVerifyCheckbox = document.getElementById('auto-verify-checkbox');
+        const finalResultElement = document.getElementById('final-result');
         
-        // Cambiar a vista de usuario
-        function showUserView() {
-            userView.classList.remove('hidden');
-            adminView.classList.add('hidden');
-            userViewBtn.classList.add('active');
-            adminViewBtn.classList.remove('active');
-            currentView = 'user';
-        }
-        
-        // Cambiar a vista de administrador
-        function showAdminView() {
-            userView.classList.add('hidden');
-            adminView.classList.remove('hidden');
-            userViewBtn.classList.remove('active');
-            adminViewBtn.classList.add('active');
-            currentView = 'admin';
-            
-            // Si el admin está logueado, mostrar el panel
-            if (isAdminLoggedIn) {
-                adminPanel.style.display = 'block';
-                displayUsers();
-            } else {
-                adminPanel.style.display = 'none';
+        // Función para generar claves RSA si no existen
+        function ensureRSAKeys() {
+            if (!rsaKeys.publicKey || !rsaKeys.privateKey) {
+                const crypt = new JSEncrypt({default_key_size: 1024}); // Usamos 1024 para mayor velocidad
+                rsaKeys.privateKey = crypt.getPrivateKey();
+                rsaKeys.publicKey = crypt.getPublicKey();
+                showStatus('Claves RSA generadas automáticamente', 'success');
             }
-        }
-        
-        // Mostrar modal de login de admin
-        function showAdminLoginModal() {
-            if (isUserLoggedIn) {
-                showMessage('Cierre sesión de usuario primero para acceder como administrador', false, 'registerMessage');
-                return;
-            }
-            adminLoginModal.classList.remove('hidden');
-        }
-        
-        // Mostrar modal de login de usuario
-        function showUserLoginModal() {
-            if (isAdminLoggedIn) {
-                showMessage('Cierre sesión de administrador primero para acceder como usuario', false, 'registerMessage');
-                return;
-            }
-            userLoginModal.classList.remove('hidden');
-        }
-        
-        // Ocultar modal de login de admin
-        function hideAdminLoginModal() {
-            adminLoginModal.classList.add('hidden');
-            document.getElementById('adminLoginMessage').style.display = 'none';
-        }
-        
-        // Ocultar modal de login de usuario
-        function hideUserLoginModal() {
-            userLoginModal.classList.add('hidden');
-            document.getElementById('userLoginMessage').style.display = 'none';
-        }
-        
-        // Actualizar la interfaz según el estado de login
-        function updateLoginUI() {
-            if (isUserLoggedIn && currentUser) {
-                userLoginBtn.classList.add('hidden');
-                userWelcome.classList.remove('hidden');
-                welcomeText.textContent = `Bienvenido ${currentUser}`;
-                registerSection.classList.add('hidden');
-                profileSection.classList.remove('hidden');
-                document.getElementById('profileUsername').value = currentUser;
-                
-                // Deshabilitar botones de admin
-                adminLoginBtn.disabled = true;
-                adminViewBtn.disabled = true;
-            } else {
-                userLoginBtn.classList.remove('hidden');
-                userWelcome.classList.add('hidden');
-                registerSection.classList.remove('hidden');
-                profileSection.classList.add('hidden');
-                
-                // Habilitar botones de admin
-                adminLoginBtn.disabled = false;
-                adminViewBtn.disabled = false;
-            }
-            
-            // Actualizar botón de admin según estado
-            if (isAdminLoggedIn) {
-                adminLoginBtn.textContent = "Sesión Admin Activa";
-                adminLoginBtn.style.background = "#f39c12";
-                
-                // Deshabilitar botones de usuario
-                userLoginBtn.disabled = true;
-                userViewBtn.disabled = true;
-            } else {
-                adminLoginBtn.textContent = "Acceso Administradores";
-                adminLoginBtn.style.background = "";
-                
-                // Habilitar botones de usuario
-                userLoginBtn.disabled = false;
-                userViewBtn.disabled = false;
-            }
-        }
-        
-        // Función para cerrar sesión de administrador
-        function logoutAdmin() {
-            isAdminLoggedIn = false;
-            adminPanel.style.display = 'none';
-            updateLoginUI();
-            showMessage('Sesión de administrador cerrada', true, 'registerMessage');
-        }
-        
-        // Función para cifrar la contraseña usando SHA-256
-        async function hashPassword(password) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-        
-        // Función para registrar un nuevo usuario
-        async function registerUser(username, password) {
-            // Validar que las contraseñas coincidan
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            if (password !== confirmPassword) {
-                return { success: false, message: 'Las contraseñas no coinciden' };
-            }
-            
-            const hashedPassword = await hashPassword(password);
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            if (users.some(user => user.username === username)) {
-                return { success: false, message: 'El nombre de usuario ya existe' };
-            }
-            
-            users.push({
-                username,
-                password: hashedPassword,
-                registeredAt: new Date().toISOString()
-            });
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            return { success: true, message: 'Usuario registrado exitosamente' };
-        }
-        
-        // Función para realizar login de usuario
-        async function userLogin(username, password) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(user => user.username === username);
-            
-            if (!user) {
-                return { success: false, message: 'Usuario no encontrado' };
-            }
-            
-            const hashedPassword = await hashPassword(password);
-            if (user.password === hashedPassword) {
-                return { success: true, message: 'Login exitoso', username: username };
-            } else {
-                return { success: false, message: 'Contraseña incorrecta' };
-            }
-        }
-        
-        // Función para actualizar perfil de usuario
-        async function updateUserProfile(oldUsername, newUsername, currentPassword, newPassword) {
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const userIndex = users.findIndex(user => user.username === oldUsername);
-            
-            if (userIndex === -1) {
-                return { success: false, message: 'Usuario no encontrado' };
-            }
-            
-            // Verificar contraseña actual si se quiere cambiar la contraseña
-            if (newPassword) {
-                const hashedCurrentPassword = await hashPassword(currentPassword);
-                if (users[userIndex].password !== hashedCurrentPassword) {
-                    return { success: false, message: 'Contraseña actual incorrecta' };
-                }
-                
-                // Validar que las nuevas contraseñas coincidan
-                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-                if (newPassword !== confirmNewPassword) {
-                    return { success: false, message: 'Las nuevas contraseñas no coinciden' };
-                }
-                
-                // Actualizar contraseña
-                users[userIndex].password = await hashPassword(newPassword);
-            }
-            
-            // Verificar si el nuevo nombre de usuario ya existe (si se está cambiando)
-            if (newUsername !== oldUsername && users.some(user => user.username === newUsername)) {
-                return { success: false, message: 'El nombre de usuario ya existe' };
-            }
-            
-            // Actualizar nombre de usuario
-            users[userIndex].username = newUsername;
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            return { success: true, message: 'Perfil actualizado correctamente', username: newUsername };
-        }
-        
-        // Función para eliminar un usuario
-        function deleteUser(username) {
-            if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${username}"?`)) {
-                return false;
-            }
-            
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const filteredUsers = users.filter(user => user.username !== username);
-            
-            localStorage.setItem('users', JSON.stringify(filteredUsers));
-            displayUsers();
-            showMessage(`Usuario "${username}" eliminado correctamente`, true, 'registerMessage');
             return true;
         }
         
-        // Función para mostrar mensajes al usuario
-        function showMessage(message, isSuccess, elementId = 'registerMessage') {
-            const messageDiv = document.getElementById(elementId);
-            messageDiv.textContent = message;
-            messageDiv.className = isSuccess ? 'message success' : 'message error';
-            messageDiv.style.display = 'block';
+        // Cifrar mensaje con AES
+        document.getElementById('encrypt-aes').addEventListener('click', function() {
+            const message = messageInput.value.trim();
             
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
-        }
-        
-        // Función para mostrar mensajes en el login
-        function showLoginMessage(message, isSuccess, isAdmin = false) {
-            const messageDiv = document.getElementById(isAdmin ? 'adminLoginMessage' : 'userLoginMessage');
-            messageDiv.textContent = message;
-            messageDiv.className = isSuccess ? 'message success' : 'message error';
-            messageDiv.style.display = 'block';
-        }
-        
-        // Función para mostrar los usuarios registrados
-        function displayUsers() {
-            const usersContainer = document.getElementById('usersContainer');
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            if (users.length === 0) {
-                usersContainer.innerHTML = '<p>No hay usuarios registrados</p>';
+            if (!message) {
+                showStatus('Por favor, ingresa un mensaje para cifrar', 'error');
                 return;
             }
             
-            usersContainer.innerHTML = users.map(user => `
-                <div class="user-item">
-                    <div class="user-info">
-                        <strong>Usuario:</strong> ${user.username}<br>
-                        <strong>Contraseña cifrada:</strong> ${user.password}<br>
-                        <strong>Registrado el:</strong> ${new Date(user.registeredAt).toLocaleString()}
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn-danger" onclick="deleteUser('${user.username}')">Eliminar</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        // Función para realizar login de administrador
-        function adminLogin() {
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
+            // Generar clave AES aleatoria
+            aesData.key = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex);
             
-            if (username === adminCredentials.username && password === adminCredentials.password) {
-                isAdminLoggedIn = true;
-                hideAdminLoginModal();
-                adminPanel.style.display = 'block';
-                displayUsers();
-                showLoginMessage('', false, true); // Limpiar mensaje
-                updateLoginUI();
-            } else {
-                showLoginMessage('Credenciales incorrectas', false, true);
-            }
-        }
-        
-        // Función para realizar logout de usuario
-        function logout() {
-            isUserLoggedIn = false;
-            currentUser = null;
-            updateLoginUI();
-            showMessage('Sesión cerrada correctamente', true, 'registerMessage');
-            profileForm.reset();
-        }
-        
-        // Event Listeners
-        userViewBtn.addEventListener('click', showUserView);
-        adminViewBtn.addEventListener('click', showAdminView);
-        adminLoginBtn.addEventListener('click', showAdminLoginModal);
-        userLoginBtn.addEventListener('click', showUserLoginModal);
-        logoutBtn.addEventListener('click', logout);
-        logoutAdminBtn.addEventListener('click', logoutAdmin);
-        cancelAdminLoginBtn.addEventListener('click', hideAdminLoginModal);
-        cancelUserLoginBtn.addEventListener('click', hideUserLoginModal);
-        adminLoginSubmitBtn.addEventListener('click', adminLogin);
-        
-        // Manejar el envío del formulario de login de usuario
-        userLoginSubmitBtn.addEventListener('click', async function() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
+            // Cifrar mensaje con AES
+            const encrypted = CryptoJS.AES.encrypt(message, aesData.key).toString();
+            aesData.encryptedMessage = encrypted;
             
-            if (!username || !password) {
-                showLoginMessage('Por favor, complete todos los campos', false, false);
+            // Mostrar resultados
+            encryptedMessageElement.textContent = encrypted;
+            aesKeyElement.textContent = aesData.key;
+            
+            showStatus('Mensaje cifrado correctamente con AES', 'success');
+            
+            if (autoVerifyCheckbox.checked) verifyAllCriteria();
+        });
+        
+        // Cifrar clave AES con RSA
+        document.getElementById('encrypt-aes-key').addEventListener('click', function() {
+            if (!aesData.key) {
+                showStatus('Primero debes generar una clave AES', 'error');
                 return;
             }
             
-            const result = await userLogin(username, password);
-            if (result.success) {
-                isUserLoggedIn = true;
-                currentUser = result.username;
-                hideUserLoginModal();
-                updateLoginUI();
-                showLoginMessage('', false, false); // Limpiar mensaje
-                showMessage(result.message, true, 'registerMessage');
-            } else {
-                showLoginMessage(result.message, false, false);
+            // Generar claves RSA si no existen
+            ensureRSAKeys();
+            
+            // Cifrar clave AES con la clave pública RSA
+            const encrypt = new JSEncrypt();
+            encrypt.setPublicKey(rsaKeys.publicKey);
+            aesData.encryptedKey = encrypt.encrypt(aesData.key);
+            
+            // Mostrar resultado
+            encryptedAesKeyElement.textContent = aesData.encryptedKey;
+            
+            showStatus('Clave AES cifrada correctamente con RSA', 'success');
+            
+            if (autoVerifyCheckbox.checked) verifyAllCriteria();
+        });
+        
+        // Descifrar clave AES con RSA
+        document.getElementById('decrypt-aes-key').addEventListener('click', function() {
+            if (!aesData.encryptedKey) {
+                showStatus('Primero debes cifrar la clave AES con RSA', 'error');
+                return;
+            }
+            
+            // Descifrar clave AES con la clave privada RSA
+            const decrypt = new JSEncrypt();
+            decrypt.setPrivateKey(rsaKeys.privateKey);
+            const decryptedKey = decrypt.decrypt(aesData.encryptedKey);
+            
+            // Mostrar resultado
+            decryptedAesKeyElement.textContent = decryptedKey;
+            
+            showStatus('Clave AES descifrada correctamente con RSA', 'success');
+            
+            if (autoVerifyCheckbox.checked) verifyAllCriteria();
+        });
+        
+        // Descifrar mensaje con AES
+        document.getElementById('decrypt-message').addEventListener('click', function() {
+            if (!aesData.encryptedMessage) {
+                showStatus('No hay mensaje cifrado para descifrar', 'error');
+                return;
+            }
+            
+            const decryptedKey = decryptedAesKeyElement.textContent;
+            if (!decryptedKey) {
+                showStatus('Primero debes descifrar la clave AES', 'error');
+                return;
+            }
+            
+            // Descifrar mensaje con AES
+            try {
+                const decrypted = CryptoJS.AES.decrypt(aesData.encryptedMessage, decryptedKey);
+                const originalText = decrypted.toString(CryptoJS.enc.Utf8);
+                
+                // Mostrar resultado
+                decryptedMessageElement.textContent = originalText;
+                
+                showStatus('Mensaje descifrado correctamente con AES', 'success');
+                
+                if (autoVerifyCheckbox.checked) verifyAllCriteria();
+            } catch (error) {
+                showStatus('Error al descifrar el mensaje: ' + error.message, 'error');
             }
         });
         
-        // Manejar el envío del formulario de registro
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Ejecutar proceso completo
+        document.getElementById('full-process').addEventListener('click', function() {
+            // Limpiar resultados anteriores
+            encryptedMessageElement.textContent = '';
+            aesKeyElement.textContent = '';
+            encryptedAesKeyElement.textContent = '';
+            decryptedAesKeyElement.textContent = '';
+            decryptedMessageElement.textContent = '';
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const message = messageInput.value.trim();
             
-            if (!username || !password) {
-                showMessage('Por favor, complete todos los campos', false, 'registerMessage');
+            if (!message) {
+                showStatus('Por favor, ingresa un mensaje para cifrar', 'error');
                 return;
             }
             
-            const result = await registerUser(username, password);
-            showMessage(result.message, result.success, 'registerMessage');
+            showStatus('Ejecutando proceso completo de cifrado y descifrado...', 'success');
             
-            if (result.success) {
-                document.getElementById('registerForm').reset();
-            }
+            // Paso 1: Generar claves RSA
+            ensureRSAKeys();
+            
+            // Paso 2: Cifrar mensaje con AES
+            aesData.key = CryptoJS.lib.WordArray.random(32).toString(CryptoJS.enc.Hex);
+            aesData.encryptedMessage = CryptoJS.AES.encrypt(message, aesData.key).toString();
+            encryptedMessageElement.textContent = aesData.encryptedMessage;
+            aesKeyElement.textContent = aesData.key;
+            
+            // Paso 3: Cifrar clave AES con RSA
+            const encrypt = new JSEncrypt();
+            encrypt.setPublicKey(rsaKeys.publicKey);
+            aesData.encryptedKey = encrypt.encrypt(aesData.key);
+            encryptedAesKeyElement.textContent = aesData.encryptedKey;
+            
+            // Paso 4: Descifrar clave AES con RSA
+            const decrypt = new JSEncrypt();
+            decrypt.setPrivateKey(rsaKeys.privateKey);
+            const decryptedKey = decrypt.decrypt(aesData.encryptedKey);
+            decryptedAesKeyElement.textContent = decryptedKey;
+            
+            // Paso 5: Descifrar mensaje con AES
+            const decrypted = CryptoJS.AES.decrypt(aesData.encryptedMessage, decryptedKey);
+            const originalText = decrypted.toString(CryptoJS.enc.Utf8);
+            decryptedMessageElement.textContent = originalText;
+            
+            showStatus('Proceso completo ejecutado correctamente', 'success');
+            
+            // Verificar todos los criterios
+            verifyAllCriteria();
         });
         
-        // Manejar el envío del formulario de perfil
-        profileForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Verificar resultado
+        document.getElementById('verify').addEventListener('click', function() {
+            verifyAllCriteria();
+        });
+        
+        // Reiniciar todo
+        document.getElementById('reset').addEventListener('click', function() {
+            // Limpiar variables
+            rsaKeys = { publicKey: '', privateKey: '' };
+            aesData = { key: '', encryptedMessage: '', encryptedKey: '' };
             
-            const newUsername = document.getElementById('profileUsername').value;
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
+            // Limpiar elementos de la interfaz
+            messageInput.value = 'Este es un mensaje de prueba para el sistema de cifrado';
+            encryptedMessageElement.textContent = '';
+            aesKeyElement.textContent = '';
+            encryptedAesKeyElement.textContent = '';
+            decryptedAesKeyElement.textContent = '';
+            decryptedMessageElement.textContent = '';
+            verificationStatusElement.textContent = '';
+            finalResultElement.style.display = 'none';
             
-            if (!newUsername) {
-                showMessage('El nombre de usuario es requerido', false, 'registerMessage');
-                return;
-            }
+            // Restablecer criterios
+            document.querySelectorAll('.criterion').forEach(criterion => {
+                criterion.className = 'criterion pending';
+                criterion.querySelector('.criterion-icon').textContent = '⏳';
+            });
             
-            // Si se quiere cambiar la contraseña, validar campos
-            if (newPassword && !currentPassword) {
-                showMessage('Debe ingresar la contraseña actual para cambiarla', false, 'registerMessage');
-                return;
-            }
+            showStatus('Sistema reiniciado. Puedes comenzar de nuevo.', 'success');
+        });
+        
+        // Función para verificar todos los criterios
+        function verifyAllCriteria() {
+            const originalMessage = messageInput.value.trim();
+            const decryptedMessage = decryptedMessageElement.textContent;
             
-            const result = await updateUserProfile(currentUser, newUsername, currentPassword, newPassword);
-            if (result.success) {
-                currentUser = result.username;
-                updateLoginUI();
-                showMessage(result.message, true, 'registerMessage');
-                profileForm.reset();
-                document.getElementById('profileUsername').value = currentUser;
+            // Criterio 1: Entrada de mensaje
+            const criterion1 = document.getElementById('criterion1');
+            if (originalMessage) {
+                criterion1.className = 'criterion success';
+                criterion1.querySelector('.criterion-icon').textContent = '✓';
             } else {
-                showMessage(result.message, false, 'registerMessage');
+                criterion1.className = 'criterion error';
+                criterion1.querySelector('.criterion-icon').textContent = '✗';
             }
-        });
+            
+            // Criterio 2: Cifrado AES del mensaje
+            const criterion2 = document.getElementById('criterion2');
+            if (aesData.encryptedMessage) {
+                criterion2.className = 'criterion success';
+                criterion2.querySelector('.criterion-icon').textContent = '✓';
+            } else {
+                criterion2.className = 'criterion error';
+                criterion2.querySelector('.criterion-icon').textContent = '✗';
+            }
+            
+            // Criterio 3: Cifrado RSA de la clave AES
+            const criterion3 = document.getElementById('criterion3');
+            if (aesData.encryptedKey) {
+                criterion3.className = 'criterion success';
+                criterion3.querySelector('.criterion-icon').textContent = '✓';
+            } else {
+                criterion3.className = 'criterion error';
+                criterion3.querySelector('.criterion-icon').textContent = '✗';
+            }
+            
+            // Criterio 4: Descifrado RSA de la clave AES
+            const criterion4 = document.getElementById('criterion4');
+            if (decryptedAesKeyElement.textContent) {
+                criterion4.className = 'criterion success';
+                criterion4.querySelector('.criterion-icon').textContent = '✓';
+            } else {
+                criterion4.className = 'criterion error';
+                criterion4.querySelector('.criterion-icon').textContent = '✗';
+            }
+            
+            // Criterio 5: Descifrado AES del mensaje
+            const criterion5 = document.getElementById('criterion5');
+            if (decryptedMessage) {
+                criterion5.className = 'criterion success';
+                criterion5.querySelector('.criterion-icon').textContent = '✓';
+            } else {
+                criterion5.className = 'criterion error';
+                criterion5.querySelector('.criterion-icon').textContent = '✗';
+            }
+            
+            // Criterio 6: Coincidencia del mensaje original y descifrado
+            const criterion6 = document.getElementById('criterion6');
+            if (originalMessage && decryptedMessage && originalMessage === decryptedMessage) {
+                criterion6.className = 'criterion success';
+                criterion6.querySelector('.criterion-icon').textContent = '✓';
+            } else {
+                criterion6.className = 'criterion error';
+                criterion6.querySelector('.criterion-icon').textContent = '✗';
+            }
+            
+            // Mostrar resultado final
+            const allSuccess = document.querySelectorAll('.criterion.success').length === 6;
+            finalResultElement.style.display = 'block';
+            
+            if (allSuccess) {
+                finalResultElement.className = 'status success';
+                finalResultElement.textContent = '¡Todos los criterios se cumplen correctamente! El sistema funciona como se espera.';
+            } else {
+                finalResultElement.className = 'status error';
+                finalResultElement.textContent = 'Algunos criterios no se cumplen. Revisa los pasos marcados con ✗.';
+            }
+            
+            showStatus('Verificación completada. Revisa el panel de criterios.', 'success');
+        }
         
-        // Inicializar la vista de usuario al cargar
-        showUserView();
-        updateLoginUI();
+        // Función para mostrar estados
+        function showStatus(message, type) {
+            verificationStatusElement.textContent = message;
+            verificationStatusElement.className = 'status ' + type;
+        }
     </script>
 </body>
 </html>
